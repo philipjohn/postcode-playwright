@@ -28,8 +28,6 @@ jobs:
       github.event.schedule == '0 21 * * *'
     name: Stackpot draw
     timeout-minutes: 60
-    runs:
-      using: 'node24'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -70,8 +68,6 @@ jobs:
       github.event.schedule == '0 12 * * *'
     name: Midday draws
     timeout-minutes: 60
-    runs:
-      using: 'node24'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -112,8 +108,6 @@ jobs:
       github.event.schedule == '0 18 * * *'
     name: Mini draw
     timeout-minutes: 60
-    runs:
-      using: 'node24'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

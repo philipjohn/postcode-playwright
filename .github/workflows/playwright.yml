@@ -1,0 +1,141 @@
+name: Playwright Tests
+on:
+  schedule:
+    # Each draw time is scheduled at both possible UTC offsets so the workflow
+    # handles BST (UTC+1) and GMT (UTC+0) automatically — no manual changes
+    # needed when the clocks change.
+    - cron: '0 8 * * *'   # 09:00 BST — stackpot morning
+    - cron: '0 9 * * *'   # 09:00 GMT — stackpot morning
+    - cron: '0 11 * * *'  # 12:00 BST — midday draws
+    - cron: '0 12 * * *'  # 12:00 GMT — midday draws
+    - cron: '0 17 * * *'  # 18:00 BST — mini draw
+    - cron: '0 18 * * *'  # 18:00 GMT — mini draw
+    - cron: '0 20 * * *'  # 21:00 BST — stackpot evening
+    - cron: '0 21 * * *'  # 21:00 GMT — stackpot evening
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # ── 09:00 & 21:00 UK ── stackpot ─────────────────────────────────────────
+  stackpot:
+    if: >
+      github.event_name != 'schedule' ||
+      github.event.schedule == '0 8 * * *' ||
+      github.event.schedule == '0 9 * * *' ||
+      github.event.schedule == '0 20 * * *' ||
+      github.event.schedule == '0 21 * * *'
+    name: Stackpot draw
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run stackpot tests
+        env:
+          POSTCODE: ${{ secrets.POSTCODE }}
+          EMAIL: ${{ secrets.EMAIL }}
+          IS_SCHEDULE: ${{ github.event_name == 'schedule' }}
+        run: |
+          if [[ "$IS_SCHEDULE" == "true" ]]; then
+            UK_HOUR=$(TZ=Europe/London date +%H)
+            if [[ "$UK_HOUR" != "09" && "$UK_HOUR" != "21" ]]; then
+              echo "Skipping: UK hour is $UK_HOUR, not 09 or 21 (clocks changed, twin cron firing)"
+              exit 0
+            fi
+          fi
+          npx playwright test tests/stackpot.spec.js
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        with:
+          name: playwright-report-stackpot-${{ github.run_id }}
+          path: playwright-report/
+          retention-days: 30
+
+  # ── 12:00 UK ── main, survey, video, bonus draws ──────────────────────────
+  midday:
+    if: >
+      github.event_name != 'schedule' ||
+      github.event.schedule == '0 11 * * *' ||
+      github.event.schedule == '0 12 * * *'
+    name: Midday draws
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run midday tests
+        env:
+          POSTCODE: ${{ secrets.POSTCODE }}
+          EMAIL: ${{ secrets.EMAIL }}
+          IS_SCHEDULE: ${{ github.event_name == 'schedule' }}
+        run: |
+          if [[ "$IS_SCHEDULE" == "true" ]]; then
+            UK_HOUR=$(TZ=Europe/London date +%H)
+            if [[ "$UK_HOUR" != "12" ]]; then
+              echo "Skipping: UK hour is $UK_HOUR, not 12 (clocks changed, twin cron firing)"
+              exit 0
+            fi
+          fi
+          npx playwright test tests/midday.spec.js
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        with:
+          name: playwright-report-midday-${{ github.run_id }}
+          path: playwright-report/
+          retention-days: 30
+
+  # ── 18:00 UK ── mini draw ─────────────────────────────────────────────────
+  mini-draw:
+    if: >
+      github.event_name != 'schedule' ||
+      github.event.schedule == '0 17 * * *' ||
+      github.event.schedule == '0 18 * * *'
+    name: Mini draw
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run mini draw tests
+        env:
+          POSTCODE: ${{ secrets.POSTCODE }}
+          EMAIL: ${{ secrets.EMAIL }}
+          IS_SCHEDULE: ${{ github.event_name == 'schedule' }}
+        run: |
+          if [[ "$IS_SCHEDULE" == "true" ]]; then
+            UK_HOUR=$(TZ=Europe/London date +%H)
+            if [[ "$UK_HOUR" != "18" ]]; then
+              echo "Skipping: UK hour is $UK_HOUR, not 18 (clocks changed, twin cron firing)"
+              exit 0
+            fi
+          fi
+          npx playwright test tests/mini-draw.spec.js
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        with:
+          name: playwright-report-mini-draw-${{ github.run_id }}
+          path: playwright-report/
+          retention-days: 30

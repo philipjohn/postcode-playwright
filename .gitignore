@@ -1,0 +1,13 @@
+# Node
+node_modules/
+
+# Local environment — contains credentials, never commit
+.env
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+/.playwright-mcp/

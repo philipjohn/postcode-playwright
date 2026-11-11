@@ -37,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
+        run: for i in 1 2 3; do npx playwright install --with-deps chromium && break || { echo "Attempt $i failed"; [ "$i" = 3 ] && exit 1; sleep 10; }; done
       - name: Run stackpot tests
         env:
           POSTCODE: ${{ secrets.POSTCODE }}
@@ -77,7 +77,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
+        run: for i in 1 2 3; do npx playwright install --with-deps chromium && break || { echo "Attempt $i failed"; [ "$i" = 3 ] && exit 1; sleep 10; }; done
       - name: Run midday tests
         env:
           POSTCODE: ${{ secrets.POSTCODE }}
@@ -117,7 +117,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
+        run: for i in 1 2 3; do npx playwright install --with-deps chromium && break || { echo "Attempt $i failed"; [ "$i" = 3 ] && exit 1; sleep 10; }; done
       - name: Run mini draw tests
         env:
           POSTCODE: ${{ secrets.POSTCODE }}
